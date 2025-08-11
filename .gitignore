@@ -1,0 +1,15 @@
+# created by virtualenv automatically
+.venv
+.env
+.idea
+__pycache__
+db.sqlite3
+
+# created by Django automatically
+*.log
+
+# created by PyCharm automatically
+*.iml
+
+# created by PyCharm automatically
+*.ipr
