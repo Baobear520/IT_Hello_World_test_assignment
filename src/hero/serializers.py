@@ -5,40 +5,29 @@ from .models import *
 class PowerStatsSerializer(serializers.Serializer):
     """
     Serializer for PowerStats model
-    includes methods to parse integer values in case of string values
-    present in the response
+    includes methods to parse integer/null values
     """
-    intelligence = serializers.SerializerMethodField()
-    strength = serializers.SerializerMethodField()
-    speed = serializers.SerializerMethodField()
-    durability = serializers.SerializerMethodField()
-    power = serializers.SerializerMethodField()
-    combat = serializers.SerializerMethodField()
+    intelligence = serializers.IntegerField(required=False, allow_null=True, default=0)
+    strength = serializers.IntegerField(required=False, allow_null=True, default=0)
+    speed = serializers.IntegerField(required=False, allow_null=True, default=0)
+    durability = serializers.IntegerField(required=False, allow_null=True, default=0)
+    power = serializers.IntegerField(required=False, allow_null=True, default=0)
+    combat = serializers.IntegerField(required=False, allow_null=True, default=0)
 
+    def to_internal_value(self, data):
+        # Convert 'null' strings to None for proper handling
+        for key in ['intelligence', 'strength', 'speed', 'durability', 'power', 'combat']:
+            if key in data and data[key] in ['null', '']:
+                data[key] = 0
+        return super().to_internal_value(data)
 
-    def get_intelligence(self, obj):
-        return self._parse_int(obj.intelligence)
-
-    def get_strength(self, obj):
-        return self._parse_int(obj.strength)
-
-    def get_speed(self, obj):
-        return self._parse_int(obj.speed)
-
-    def get_durability(self, obj):
-        return self._parse_int(obj.durability)
-
-    def get_power(self, obj):
-        return self._parse_int(obj.power)
-
-    def get_combat(self, obj):
-        return self._parse_int(obj.combat)
-
-    def _parse_int(self, value):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return None
+    def to_representation(self, instance):
+        # Ensure all fields are present in the output
+        ret = super().to_representation(instance)
+        for field in ['intelligence', 'strength', 'speed', 'durability', 'power', 'combat']:
+            if field not in ret or ret[field] is None:
+                ret[field] = 0
+        return ret
 
 class BiographySerializer(serializers.ModelSerializer):
     class Meta:

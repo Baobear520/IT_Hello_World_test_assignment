@@ -4,27 +4,21 @@ from django.db import models
 
 class PowerStats(models.Model):
     intelligence = models.IntegerField(
-        default=10,
         validators=[MinValueValidator(1),MaxValueValidator(100)]
     )
     strength = models.IntegerField(
-        default=10,
         validators=[MinValueValidator(1),MaxValueValidator(100)]
     )
     speed = models.IntegerField(
-        default=10,
         validators=[MinValueValidator(1),MaxValueValidator(100)]
     )
     power = models.IntegerField(
-        default=10,
         validators=[MinValueValidator(1),MaxValueValidator(100)]
     )
     combat = models.IntegerField(
-        default=10,
         validators=[MinValueValidator(1),MaxValueValidator(100)]
     )
     durability = models.IntegerField(
-        default=10,
         validators=[MinValueValidator(1),MaxValueValidator(100)]
     )
 
