@@ -1,6 +1,7 @@
 
 from django.conf import settings
-from rest_framework import status
+from rest_framework import status, serializers
+from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 
@@ -10,12 +11,38 @@ from .serializers import HeroInputSerializer, RetrieveHeroListSerializer
 
 
 class HeroListCreateView(ListCreateAPIView):
-    queryset = Hero.objects.all()
+
+    def get_queryset(self):
+        queryset = Hero.objects.all()
+        params = self.request.query_params
+        print(params)
+
+        if name := params.get('name'):
+            queryset = queryset.filter(name__iexact=name)
+
+        for field in ['intelligence', 'strength', 'speed', 'power']:
+            if value := params.get(field):
+                queryset = queryset.filter(**{f'powerstats__{field}__exact': value})
+            if gte := params.get(f'{field}_gte'):
+                queryset = queryset.filter(**{f'powerstats__{field}__gte': gte})
+            if lte := params.get(f'{field}_lte'):
+                queryset = queryset.filter(**{f'powerstats__{field}__lte': lte})
+
+        return queryset
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return RetrieveHeroListSerializer
         return HeroInputSerializer  # Use input serializer for POST
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        if not queryset.exists():
+            raise NotFound("No heroes match the given filters.")
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         # Step 1: Validate user input
@@ -32,7 +59,6 @@ class HeroListCreateView(ListCreateAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             elif status_code == 500:
-                print(error)
                 return Response(
                     {'detail': 'Service Unavailable'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
